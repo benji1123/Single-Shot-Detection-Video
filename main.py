@@ -8,6 +8,9 @@ from data import BaseTransform, VOC_CLASSES as labelmap
 from ssd import build_ssd                      # to construct NN
 import imageio                                 # to perform processing on video with detect()
 
+from tkinter import Tk                         # file selection dialog-box func
+from tkinter.filedialog import askopenfilename
+
 
 # Input video-frame to NN for classification | return video-frame with OBJ highlighted.........
 def detect(frame, net, transform):
@@ -34,7 +37,7 @@ def detect(frame, net, transform):
             # NN-Detections are Visualized on Video-Frame ...... 
             cv2.rectangle(frame, (int(coord[0]),int(coord[1])), (int(coord[2]),int(coord[3])), (255,0,0), 2);     # draw RECT around NN-detection 
             #[medium, (coord1), (coord2), color, thickness]    
-            cv2.putText(frame, labelmap[i-1], (int(coord[0]),int(coord[1])), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,255), 2, cv2.LINE_AA);    # label NN-detection
+            cv2.putText(frame, labelmap[i-1], (0,int(coord[3])), cv2.FONT_HERSHEY_SIMPLEX, 7, (255,255,255), 5, cv2.LINE_AA);    # label NN-detection
             # [medium, text-content, text position (upper-left), font, text-size, color, text-thickness, text-style (continuous)]
             
             j += 1; # 'j' iterates the occurences of i'th detected class
@@ -57,12 +60,17 @@ transform = BaseTransform(net.size, (104/256.0,117/256.0,123/256.0));       # th
 
 
 # Input-Video frames are Classifed one-by-one | write new Video with Targets Highlighted......
-reader = imageio.get_reader('epic-horses.mp4');
+
+Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
+filename = askopenfilename() # show an "Open" dialog box and return the path to the selected file
+
+reader = imageio.get_reader(filename);
 fps = reader.get_meta_data()['fps'];
-writer = imageio.get_writer('outputtt.mp4', fps = fps);
+writer = imageio.get_writer('ben.mp4', fps = fps);
 
 for i, frame in enumerate(reader):
     frame = detect(frame, net.eval(), transform);         #targets are highlighted in each frame of 'reader'
     writer.append_data(frame);
     print(i);
+print("detection complete | see the newly-created output-video in your working directory!");
 writer.close();
